@@ -34,7 +34,7 @@
   {:depends [dev:desktop-watch dev:open-dev-electron-app]}
 
   dev:electron-start
-  {:doc "Start electron dev by watching assets and opening dev app"
+  {:doc "Start electron dev (with plugin support) by watching assets and opening dev app"
    ;; Parallel execution - https://book.babashka.org/#parallel
    :task (run '-dev:electron-start {:parallel true})}
 

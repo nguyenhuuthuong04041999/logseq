@@ -56,7 +56,10 @@
                                           :git/sha "d61ce7e29186de021a2a453a8cee68efb5a88440"}
 
   logseq/logseq-schema                   {:git/url "https://github.com/logseq/logseq-schema"
-                                          :git/sha "6eeb51cd6d80bbffa0873c1e79790dc1f4ff68cf"}}
+                                          :git/sha "6eeb51cd6d80bbffa0873c1e79790dc1f4ff68cf"}
+
+  ;; Pin closure-compiler to version required by shadow-cljs 3.4.4
+  com.google.javascript/closure-compiler {:mvn/version "v20250407"}}
 
  :aliases {:cljs {:extra-paths ["src/dev-cljs/" "src/test/" "src/electron/"]
                   :extra-deps  {org.clojure/tools.namespace      {:mvn/version "1.5.0"}

@@ -7,7 +7,7 @@
 (defn watch
   "Watches environment to reload cljs, css and other assets"
   []
-  (shell {:shutdown nil} "pnpm electron-watch"))
+  (shell {:shutdown nil :extra-env {"ENABLE_PLUGINS" "true"}} "pnpm electron-watch"))
 
 (defn open-dev-electron-app
   "Opens dev-electron-app when watch process has built main.js"
