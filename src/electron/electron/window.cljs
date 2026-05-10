@@ -19,7 +19,8 @@
 (def MAIN_WINDOW_ENTRY (if dev?
                          ;; Use index.html to test plugins on development mode
                          "http://localhost:3001"
-                         (str "file://" (node-path/join js/__dirname "index.html"))))
+                         ;; Same origin as plugins (lsp://logseq.com/) to avoid cross-origin SecurityError
+                         "lsp://logseq.com/index.html"))
 
 (defn create-main-window!
   ([]

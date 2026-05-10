@@ -19,7 +19,7 @@ export const path =
 export const IS_DEV = process.env.NODE_ENV === 'development'
 export const PROTOCOL_FILE = 'file://'
 export const PROTOCOL_LSP = 'lsp://'
-export const URL_LSP = PROTOCOL_LSP + 'logseq.io/'
+export const URL_LSP = PROTOCOL_LSP + 'logseq.com/plugins/'
 
 let _appPathRoot: string
 
@@ -43,9 +43,8 @@ export async function getSDKPathRoot(): Promise<string> {
     return localStorage.getItem('LSP_DEV_SDK_ROOT') || 'http://localhost:8080'
   }
 
-  const appPathRoot = await getAppPathRoot()
-
-  return safetyPathJoin(appPathRoot, 'js')
+  // Use lsp:// so the SDK loads same-origin from the app's js/ directory
+  return PROTOCOL_LSP + 'logseq.com/js'
 }
 
 export function isObject(item: any) {
@@ -245,7 +244,10 @@ export function safetyPathJoin(basePath: string, ...parts: Array<string>) {
   try {
     const url = new URL(basePath)
     if (!url.origin) throw new Error(null)
-    const fullPath = path.join(basePath.substr(url.origin.length), ...parts)
+    // Always use forward slashes for URL path components (fix Windows backslash issue)
+    const toForward = (s: string) => s.replace(/\\/g, '/')
+    const urlPath = toForward(basePath.substr(url.origin.length))
+    const fullPath = nodePath.posix.join(urlPath, ...parts.map(toForward))
     return url.origin + fullPath
   } catch (e) {
     return path.join(basePath, ...parts)

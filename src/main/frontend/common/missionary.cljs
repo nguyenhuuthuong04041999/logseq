@@ -125,12 +125,18 @@
 (defn run-task
   "Return the canceler"
   [key' task & {:keys [succ fail]}]
+  (when-not (fn? task)
+    (throw (ex-info "run-task: task is not a function"
+                    {:key key' :task task :task-type (type task)})))
   (let [cancel (task (or succ #(log/info :key key' :succ %)) (or fail (partial fail-case-default-handler key')))]
     #(cancel)))
 
 (defn run-task*
   "Return the canceler"
   [task & {:keys [succ fail]}]
+  (when-not (fn? task)
+    (throw (ex-info "run-task*: task is not a function"
+                    {:task task :task-type (type task)})))
   (let [cancel (task (or succ (constantly nil)) (or fail (partial fail-case-default-handler nil)))]
     #(cancel)))
 

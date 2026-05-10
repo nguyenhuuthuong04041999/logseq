@@ -1,12 +1,19 @@
 (ns frontend.extensions.graph.pixi
   (:require [cljs-bean.core :as bean]
+            [camel-snake-kebab.core :as csk]
+            [clojure.string :as string]
             ["d3-force"
              :refer [forceCenter forceCollide forceLink forceManyBody forceSimulation forceX forceY]
              :as force]
             [goog.object :as gobj]
             [frontend.colors :as colors]
             ["graphology" :as graphology]
-            ["pixi-graph-fork" :as Pixi-Graph]))
+            ["pixi-graph-fork" :as Pixi-Graph]
+            ["@pixi/core" :refer [Texture]]
+            ["@pixi/sprite" :refer [Sprite]]
+            ["@pixi/mixin-get-global-position"]
+            ["react" :as react]
+            ["react-dom/server.browser" :as react-dom-server]))
 
 (defonce *graph-instance (atom nil))
 (defonce *simulation (atom nil))
@@ -26,6 +33,184 @@
    "#7f7f7f"
    "#bcbd22"
    "#17becf"])
+
+;; Icon rendering for graph nodes ----------------------------------------------
+;;
+;; pixi-graph-fork không render icon — phần icon trong README chỉ là tài liệu
+;; của upstream pixi-graph. Ta tự gắn Sprite icon vào nodeGfx sau khi PixiGraph
+;; tạo xong. Hai loại icon được hỗ trợ:
+;;   - {:type :tabler-icon :id "book"}: render React component qua react-dom/server
+;;     thành SVG string -> Image -> Canvas -> PIXI.Texture
+;;   - {:type :emoji :id "📚"}: vẽ ký tự emoji trực tiếp lên canvas
+
+(defonce *icon-texture-cache (atom {}))
+
+(defn- normalize-icon
+  "Chấp nhận string/keyword (hiểu là tabler-icon) hoặc map sẵn :type/:id."
+  [icon]
+  (cond
+    (or (string? icon) (keyword? icon))
+    (let [s (name icon)]
+      (when-not (string/blank? s) {:type :tabler-icon :id s}))
+
+    (and (map? icon) (:id icon) (some? (:type icon)))
+    (let [t (:type icon)]
+      {:type (cond (keyword? t) t
+                   (string? t) (keyword t)
+                   :else nil)
+       :id (:id icon)})
+
+    :else nil))
+
+(defn- relative-luminance
+  "Tính luminance tương đối (0–1) của màu hex #RRGGBB."
+  [hex]
+  (try
+    (let [h (string/replace hex #"^#" "")
+          r (js/parseInt (subs h 0 2) 16)
+          g (js/parseInt (subs h 2 4) 16)
+          b (js/parseInt (subs h 4 6) 16)
+          ch (fn [c]
+               (let [c (/ c 255)]
+                 (if (<= c 0.03928)
+                   (/ c 12.92)
+                   (js/Math.pow (/ (+ c 0.055) 1.055) 2.4))))]
+      (+ (* 0.2126 (ch r)) (* 0.7152 (ch g)) (* 0.0722 (ch b))))
+    (catch :default _ 0.5)))
+
+(defn- contrast-color
+  "Trả về #ffffff hoặc #000000 tùy theo màu nào tương phản hơn với bg-hex."
+  [bg-hex]
+  (if (> (relative-luminance bg-hex) 0.179) "#000000" "#ffffff"))
+
+(defn- icon-cache-key
+  [icon color size]
+  (str (some-> icon :type name) "|" (:id icon) "|" color "|" size))
+
+(defn- canvas->texture
+  [canvas]
+  (.from Texture canvas))
+
+(defn- build-emoji-texture
+  [emoji-id size]
+  (let [px (* size 2)
+        canvas (js/document.createElement "canvas")
+        _ (set! (.-width canvas) px)
+        _ (set! (.-height canvas) px)
+        ctx (.getContext canvas "2d")]
+    (set! (.-font ctx) (str (* size 1.6) "px \"Apple Color Emoji\",\"Segoe UI Emoji\",\"Noto Color Emoji\",serif"))
+    (set! (.-textAlign ctx) "center")
+    (set! (.-textBaseline ctx) "middle")
+    (.fillText ctx emoji-id (/ px 2) (/ px 2))
+    (canvas->texture canvas)))
+
+(defn- tabler-icon->svg-string
+  [icon-id color size]
+  (let [tabler-icons (gobj/get js/window "tablerIcons")]
+    (if-not tabler-icons
+      (do (js/console.warn "[graph-icon] window.tablerIcons not loaded yet") nil)
+      (let [pascal (str "Icon" (csk/->PascalCase icon-id))
+            comp (gobj/get tabler-icons pascal)]
+        (if-not comp
+          (do (js/console.warn "[graph-icon] missing tabler icon" pascal) nil)
+          (let [el (react/createElement comp #js {:size size
+                                                  :color color
+                                                  :stroke 2})]
+            (.renderToStaticMarkup react-dom-server el)))))))
+
+(defn- svg-string->texture-async
+  [svg-str size cb]
+  (let [px (* size 2)
+        blob (js/Blob. #js [svg-str] #js {:type "image/svg+xml;charset=utf-8"})
+        url (js/URL.createObjectURL blob)
+        img (js/Image.)]
+    (set! (.-onload img)
+          (fn []
+            (try
+              (let [canvas (js/document.createElement "canvas")
+                    _ (set! (.-width canvas) px)
+                    _ (set! (.-height canvas) px)
+                    ctx (.getContext canvas "2d")]
+                (.drawImage ctx img 0 0 px px)
+                (cb (canvas->texture canvas)))
+              (catch :default e
+                (js/console.error "icon canvas error" e)
+                (cb nil))
+              (finally
+                (js/URL.revokeObjectURL url)))))
+    (set! (.-onerror img)
+          (fn [e]
+            (js/console.error "icon img load failed" e)
+            (js/URL.revokeObjectURL url)
+            (cb nil)))
+    (set! (.-src img) url)))
+
+(defn- get-icon-texture
+  "Trả texture đã cache hoặc build mới rồi gọi cb."
+  [icon color size cb]
+  (let [k (icon-cache-key icon color size)]
+    (if-let [tex (get @*icon-texture-cache k)]
+      (cb tex)
+      (case (:type icon)
+        :emoji
+        (when-let [emoji-id (:id icon)]
+          (let [tex (build-emoji-texture emoji-id size)]
+            (swap! *icon-texture-cache assoc k tex)
+            (cb tex)))
+
+        :tabler-icon
+        (when-let [svg (tabler-icon->svg-string (:id icon) color size)]
+          (svg-string->texture-async
+           svg size
+           (fn [tex]
+             (when tex
+               (swap! *icon-texture-cache assoc k tex)
+               (cb tex)))))
+
+        nil))))
+
+(defn- do-attach-icon-sprite!
+  [pixi-node icon node-size node-color dark?]
+  (let [node-gfx (.-nodeGfx pixi-node)
+        ;; Ưu tiên dùng màu node để tính contrast; fallback về dark?
+        bg-color (or node-color (if dark? "#1f2937" "#e5e7eb"))
+        color (contrast-color bg-color)
+        tex-px 32
+        display-size (max 14 (* node-size 1.5))]
+    (try
+      (get-icon-texture
+       icon color tex-px
+       (fn [tex]
+         (when (and tex node-gfx)
+           (let [sprite (new Sprite tex)]
+             (.set (.-anchor sprite) 0.5)
+             (set! (.-width sprite) display-size)
+             (set! (.-height sprite) display-size)
+             (.addChild node-gfx sprite)))))
+      (catch :default e
+        (js/console.error "attach icon failed" e)))))
+
+(defn- attach-icon-sprite!
+  "PixiGraph tạo node bất đồng bộ (batch 20/100ms), nên retry tới khi node có
+  trong getNodesObjects() rồi mới gắn Sprite icon."
+  ([pixi-graph node-id icon node-size node-color dark?]
+   (attach-icon-sprite! pixi-graph node-id icon node-size node-color dark? 0))
+  ([pixi-graph node-id icon node-size node-color dark? attempts]
+   (let [nodes-objects (.getNodesObjects pixi-graph)
+         pixi-node (.get nodes-objects (str node-id))]
+     (cond
+       pixi-node
+       (do-attach-icon-sprite! pixi-node icon node-size node-color dark?)
+
+       (< attempts 60)
+       (js/setTimeout
+        #(attach-icon-sprite! pixi-graph node-id icon node-size node-color dark? (inc attempts))
+        100)
+
+       :else
+       (js/console.warn "[graph-icon] gave up waiting for node" node-id)))))
+
+;; -----------------------------------------------------------------------------
 
 (defn default-style
   [dark?]
@@ -240,7 +425,11 @@
           (when register-handlers-fn
             (register-handlers-fn pixi-graph))
           (set-up-listeners! pixi-graph)
-          (.on simulation "tick" (tick! pixi-graph graph nodes-js links-js)))))
+          (.on simulation "tick" (tick! pixi-graph graph nodes-js links-js))
+          (doseq [node nodes]
+            (when-let [icon (normalize-icon (:icon node))]
+              (attach-icon-sprite! pixi-graph (:id node) icon
+                                   (or (:size node) 8) (:color node) dark?))))))
     (catch :default e
       (js/console.error e)))
   state)

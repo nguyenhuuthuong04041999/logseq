@@ -40,128 +40,128 @@
   (apply
    ordered-map
    (defkeywords
-     :logseq.property/type {:title "Property type"
+     :logseq.property/type {:title "Property type (Loại thuộc tính)"
                             :schema {:type :keyword
                                      :hide? true}}
-     :logseq.property/hide? {:title "Hide this property or page"
+     :logseq.property/hide? {:title "Hide this property or page (Ẩn thuộc tính/trang)"
                              :schema {:type :checkbox
                                       :hide? true}}
-     :logseq.property/public? {:title "Property public?"
+     :logseq.property/public? {:title "Property public? (Thuộc tính công khai?)"
                                :schema {:type :checkbox
                                         :hide? true}}
-     :logseq.property/view-context {:title "Property view context"
+     :logseq.property/view-context {:title "Property view context (Ngữ cảnh xem)"
                                     :schema {:type :keyword
                                              :hide? true}}
-     :logseq.property/ui-position {:title "Property position"
+     :logseq.property/ui-position {:title "Property position (Vị trí hiển thị)"
                                    :schema {:type :keyword
                                             :hide? true}}
-     :logseq.property/classes {:title "Property classes"
+     :logseq.property/classes {:title "Property classes (Thẻ của thuộc tính)"
                                :schema {:type :entity
                                         :cardinality :many
                                         :public? false
                                         :hide? true}}
-     :logseq.property/value {:title "Property value"
+     :logseq.property/value {:title "Property value (Giá trị thuộc tính)"
                              :schema {:type :any
                                       :public? false
                                       :hide? true}}
 
-     :block/alias          {:title "Alias"
+     :block/alias          {:title "Alias (Tên thay thế)"
                             :attribute :block/alias
                             :schema {:type :page
                                      :cardinality :many
                                      :view-context :page
                                      :public? true}
                             :queryable? true}
-     :block/tags           {:title "Tags"
+     :block/tags           {:title "Tags (Thẻ)"
                             :attribute :block/tags
                             :schema {:type :class
                                      :cardinality :many
                                      :public? true}
                             :queryable? true}
-     :block/parent         {:title "Node parent"
+     :block/parent         {:title "Node parent (Node cha)"
                             :attribute :block/parent
                             :schema {:type :entity
                                      :public? false
                                      :hide? true}}
-     :block/order          {:title "Node order"
+     :block/order          {:title "Node order (Thứ tự node)"
                             :attribute :block/order
                             :schema {:type :string
                                      :public? false
                                      :hide? true}}
-     :block/collapsed?     {:title "Node collapsed?"
+     :block/collapsed?     {:title "Node collapsed? (Node thu gọn?)"
                             :attribute :block/collapsed?
                             :schema {:type :checkbox
                                      :public? false
                                      :hide? true}}
-     :block/page           {:title "Node page"
+     :block/page           {:title "Node page (Trang của node)"
                             :attribute :block/page
                             :schema {:type :entity
                                      :public? false
                                      :hide? true}}
-     :block/refs           {:title "Node references"
+     :block/refs           {:title "Node references (Tham chiếu node)"
                             :attribute :block/refs
                             :schema {:type :entity
                                      :cardinality :many
                                      :public? false
                                      :hide? true}}
-     :block/link           {:title "Node links to"
+     :block/link           {:title "Node links to (Node liên kết đến)"
                             :attribute :block/link
                             :schema {:type :entity
                                      :public? false
                                      :hide? true}}
-     :block/title          {:title "Node title"
+     :block/title          {:title "Node title (Tiêu đề node)"
                             :attribute :block/title
                             :schema {:type :string
                                      :public? false
                                      :hide? true}}
-     :block/closed-value-property  {:title "Closed value property"
+     :block/closed-value-property  {:title "Closed value property (Thuộc tính giá trị cố định)"
                                     :attribute :block/closed-value-property
                                     :schema {:type :entity
                                              :public? false
                                              :hide? true}}
-     :block/journal-day    {:title "Journal date"
+     :block/journal-day    {:title "Journal date (Ngày nhật ký)"
                             :attribute :block/journal-day
                             :schema {:type :raw-number
                                      :public? false
                                      :hide? true}
                             :queryable? true}
-     :block/created-at     {:title "Node created at"
+     :block/created-at     {:title "Node created at (Thời điểm tạo)"
                             :attribute :block/created-at
                             :schema {:type :datetime
                                      :public? false
                                      :hide? true}}
-     :block/updated-at     {:title "Node updated at"
+     :block/updated-at     {:title "Node updated at (Thời điểm cập nhật)"
                             :attribute :block/updated-at
                             :schema {:type :datetime
                                      :public? false
                                      :hide? true}}
-     :logseq.property.node/display-type {:title "Node Display Type"
+     :logseq.property.node/display-type {:title "Node Display Type (Kiểu hiển thị node)"
                                          :schema {:type :keyword
                                                   :public? false
                                                   :hide? true
                                                   :view-context :block}
                                          :queryable? true}
-     :logseq.property/description {:title "Description"
+     :logseq.property/description {:title "Description (Mô tả)"
                                    :schema
                                    {:type :default
                                     :public? true}}
-     :logseq.property.code/lang {:title "Code Mode"
+     :logseq.property.code/lang {:title "Code Mode (Chế độ code)"
                                  :schema {:type :string
                                           :public? false
                                           :hide? true
                                           :view-context :block}
                                  :queryable? true}
-     :logseq.property/default-value {:title "Default value"
+     :logseq.property/default-value {:title "Default value (Giá trị mặc định)"
                                      :schema {:type :entity
                                               :public? false
                                               :hide? true
                                               :view-context :property}}
-     :logseq.property/scalar-default-value {:title "Non ref type default value"
+     :logseq.property/scalar-default-value {:title "Non ref type default value (Giá trị mặc định không tham chiếu)"
                                             :schema {:type :any
                                                      :public? false
                                                      :hide? true
                                                      :view-context :property}}
-     :logseq.property.class/extends {:title "Extends"
+     :logseq.property.class/extends {:title "Extends (Kế thừa từ)"
                                      :schema {:type :class
                                               :cardinality :many
                                               :public? true
@@ -169,56 +169,56 @@
                                      :queryable? true
                                      :properties
                                      {:logseq.property/description "This enables tags to inherit properties from other tags"}}
-     :logseq.property.class/properties {:title "Tag Properties"
+     :logseq.property.class/properties {:title "Tag Properties (Thuộc tính thẻ)"
                                         :schema {:type :property
                                                  :cardinality :many
                                                  :public? true
                                                  :view-context :never}}
-     :logseq.property.class/bidirectional-property-title {:title "Bidirectional property title"
+     :logseq.property.class/bidirectional-property-title {:title "Bidirectional property title (Tiêu đề thuộc tính hai chiều)"
                                                           :schema {:type :string
                                                                    :public? true
                                                                    :view-context :class}}
-     :logseq.property.class/enable-bidirectional? {:title "Enable bidirectional properties"
+     :logseq.property.class/enable-bidirectional? {:title "Enable bidirectional properties (Bật thuộc tính hai chiều)"
                                                    :schema {:type :checkbox
                                                             :public? true
                                                             :view-context :class}
                                                    :properties
                                                    {:logseq.property/description "When enabled, this tag will show reverse nodes that link to the current node via properties."}}
-     :logseq.property/hide-empty-value {:title "Hide empty value"
+     :logseq.property/hide-empty-value {:title "Hide empty value (Ẩn giá trị trống)"
                                         :schema {:type :checkbox
                                                  :public? true
                                                  :view-context :property}
                                         :properties
                                         {:logseq.property/description "Hides a property's value on any node when empty e.g. when a property appears on a node through a tag."}}
-     :logseq.property.class/hide-from-node {:title "Hide from Node"
+     :logseq.property.class/hide-from-node {:title "Hide from Node (Ẩn khỏi node)"
                                             :schema {:type :checkbox
                                                      :public? true
                                                      :view-context :class}}
-     :logseq.property/query       {:title "Query"
+     :logseq.property/query       {:title "Query (Truy vấn)"
                                    :schema {:type :default
                                             :public? true
                                             :hide? true
                                             :view-context :block}}
-     :logseq.property/page-tags {:title "Page Tags"
+     :logseq.property/page-tags {:title "Page Tags (Thẻ trang)"
                                  :schema {:type :page
                                           :public? true
                                           :view-context :page
                                           :cardinality :many}
                                  :properties
                                  {:logseq.property/description "Provides a way for a page to associate to another page i.e. backward compatible tagging."}}
-     :logseq.property/background-color {:title "Background color"
+     :logseq.property/background-color {:title "Background color (Màu nền)"
                                         :schema {:type :default :hide? true}}
      ;; number (1-6) or boolean for auto heading
-     :logseq.property/heading {:title "Heading"
+     :logseq.property/heading {:title "Heading (Tiêu đề)"
                                :schema {:type :any :hide? true}
                                :queryable? true}
-     :logseq.property/created-from-property {:title "Created from property"
+     :logseq.property/created-from-property {:title "Created from property (Tạo từ thuộc tính)"
                                              :schema {:type :entity
                                                       :hide? true}}
-     :logseq.property/built-in?             {:title "Built in?"
+     :logseq.property/built-in?             {:title "Built in? (Tích hợp sẵn?)"
                                              :schema {:type :checkbox
                                                       :hide? true}}
-     :logseq.property/asset   {:title "Asset"
+     :logseq.property/asset   {:title "Asset (Tệp đính kèm)"
                                :schema {:type :entity
                                         :hide? true}}
      ;; used by pdf
@@ -226,9 +226,9 @@
      :logseq.property/ls-type {:schema {:type :keyword
                                         :hide? true}}
 
-     :logseq.property.pdf/hl-type {:title "Annotation type"
+     :logseq.property.pdf/hl-type {:title "Annotation type (Loại chú thích PDF)"
                                    :schema {:type :keyword :hide? true}}
-     :logseq.property.pdf/hl-color {:title "Annotation color"
+     :logseq.property.pdf/hl-color {:title "Annotation color (Màu chú thích PDF)"
                                     :schema {:type :default :hide? true}
                                     :closed-values
                                     (mapv (fn [[db-ident value]]
@@ -240,38 +240,38 @@
                                            [:logseq.property/color.green "green"]
                                            [:logseq.property/color.blue "blue"]
                                            [:logseq.property/color.purple "purple"]])}
-     :logseq.property.pdf/hl-page {:title "Annotation page"
+     :logseq.property.pdf/hl-page {:title "Annotation page (Trang chú thích PDF)"
                                    :schema {:type :raw-number :hide? true}}
-     :logseq.property.pdf/hl-image {:title "Annotation image"
+     :logseq.property.pdf/hl-image {:title "Annotation image (Ảnh chú thích PDF)"
                                     :schema {:type :entity :hide? true}}
-     :logseq.property.pdf/hl-value {:title "Annotation data"
+     :logseq.property.pdf/hl-value {:title "Annotation data (Dữ liệu chú thích PDF)"
                                     :schema {:type :map :hide? true}}
      ;; FIXME: :logseq.property/order-list-type should updated to closed values
-     :logseq.property/order-list-type {:title "List type"
+     :logseq.property/order-list-type {:title "List type (Kiểu danh sách)"
                                        :schema {:type :default
                                                 :hide? true}}
-     :logseq.property.linked-references/includes {:title "Included references"
+     :logseq.property.linked-references/includes {:title "Included references (Tham chiếu bao gồm)"
                                                   :schema {; could be :entity to support blocks(objects) in the future
                                                            :type :node
                                                            :cardinality :many
                                                            :hide? true}}
-     :logseq.property.linked-references/excludes {:title "Excluded references"
+     :logseq.property.linked-references/excludes {:title "Excluded references (Tham chiếu loại trừ)"
                                                   :schema {:type :node
                                                            :cardinality :many
                                                            :hide? true}}
 
      ;; Journal props
-     :logseq.property.journal/title-format {:title "Title Format"
+     :logseq.property.journal/title-format {:title "Title Format (Định dạng tiêu đề nhật ký)"
                                             :schema
                                             {:type :string
                                              :public? false}}
 
-     :logseq.property/choice-checkbox-state {:title "Choice checkbox state"
+     :logseq.property/choice-checkbox-state {:title "Choice checkbox state (Trạng thái checkbox lựa chọn)"
                                              :schema {:type :checkbox
                                                       :hide? true}
                                              :queryable? false}
      ;; tag-scoped choice, a choice can be specified locally for specified tags
-     :logseq.property/choice-classes {:title "Choice classes"
+     :logseq.property/choice-classes {:title "Choice classes (Thẻ lựa chọn)"
                                       :schema {:type :class
                                                :cardinality :many
                                                :public? false
@@ -279,20 +279,20 @@
                                                :view-context :never}
                                       :queryable? false}
      ;; tag can define which global choices are hidden for its objects
-     :logseq.property/choice-exclusions {:title "Choice exclusions"
+     :logseq.property/choice-exclusions {:title "Choice exclusions (Loại trừ lựa chọn)"
                                          :schema {:type :node
                                                   :cardinality :many
                                                   :public? false
                                                   :hide? true
                                                   :view-context :never}
                                          :queryable? false}
-     :logseq.property/checkbox-display-properties {:title "Properties displayed as checkbox"
+     :logseq.property/checkbox-display-properties {:title "Properties displayed as checkbox (Thuộc tính dạng checkbox)"
                                                    :schema {:type :property
                                                             :cardinality :many
                                                             :hide? true}
                                                    :queryable? false}
      ;; Task props
-     :logseq.property/status {:title "Status"
+     :logseq.property/status {:title "Status (Trạng thái)"
                               :schema
                               {:type :default
                                :public? true
@@ -315,7 +315,7 @@
                                            :logseq.property/default-value :logseq.property/status.todo
                                            :logseq.property/enable-history? true}
                               :queryable? true}
-     :logseq.property/priority {:title "Priority"
+     :logseq.property/priority {:title "Priority (Độ ưu tiên)"
                                 :schema
                                 {:type :default
                                  :public? true
@@ -332,14 +332,14 @@
                                        [:logseq.property/priority.urgent "Urgent" "priorityLvlUrgent"]])
                                 :properties {:logseq.property/hide-empty-value true
                                              :logseq.property/enable-history? true}}
-     :logseq.property/deadline {:title "Deadline"
+     :logseq.property/deadline {:title "Deadline (Hạn chót)"
                                 :schema {:type :datetime
                                          :public? true
                                          :ui-position :block-below}
                                 :properties {:logseq.property/hide-empty-value true
                                              :logseq.property/description "Use it to finish something at a specific date(time)."}
                                 :queryable? true}
-     :logseq.property/scheduled {:title "Scheduled"
+     :logseq.property/scheduled {:title "Scheduled (Ngày bắt đầu)"
                                  :schema {:type :datetime
                                           :public? true
                                           :ui-position :block-below}
@@ -348,12 +348,12 @@
                                  :queryable? true}
      :logseq.property.repeat/recur-frequency (let [schema {:type :number
                                                            :public? false}]
-                                               {:title "Repeating recur frequency"
+                                               {:title "Repeating recur frequency (Tần suất lặp lại)"
                                                 :schema schema
                                                 :properties {:logseq.property/hide-empty-value true
                                                              :logseq.property/default-value 1}
                                                 :queryable? true})
-     :logseq.property.repeat/recur-unit {:title "Repeating recur unit"
+     :logseq.property.repeat/recur-unit {:title "Repeating recur unit (Đơn vị lặp lại)"
                                          :schema {:type :default
                                                   :public? false}
                                          :closed-values (mapv (fn [[db-ident value]]
@@ -369,40 +369,40 @@
                                          :properties {:logseq.property/hide-empty-value true
                                                       :logseq.property/default-value :logseq.property.repeat/recur-unit.day}
                                          :queryable? true}
-     :logseq.property.repeat/repeated? {:title "Node Repeats?"
+     :logseq.property.repeat/repeated? {:title "Node Repeats? (Node lặp lại?)"
                                         :schema {:type :checkbox
                                                  :hide? true}
                                         :queryable? true}
-     :logseq.property.repeat/temporal-property {:title "Repeating Temporal Property"
+     :logseq.property.repeat/temporal-property {:title "Repeating Temporal Property (Thuộc tính thời gian lặp)"
                                                 :schema {:type :property
                                                          :hide? true}}
-     :logseq.property.repeat/checked-property {:title "Repeating Checked Property"
+     :logseq.property.repeat/checked-property {:title "Repeating Checked Property (Thuộc tính kiểm tra lặp)"
                                                :schema {:type :property
                                                         :hide? true}}
 
      ;; TODO: Add more props :Assignee, :Estimate, :Cycle, :Project
 
-     :logseq.property/icon {:title "Icon"
-                            :schema {:type :map}}
-     :logseq.property/publishing-public? {:title "Publishing Public?"
+     :logseq.property/icon {:title "Icon (Biểu tượng)"
+                            :schema {:type :map :public? true}}
+     :logseq.property/publishing-public? {:title "Publishing Public? (Xuất bản công khai?)"
                                           :schema
                                           {:type :checkbox
                                            :hide? true
                                            :view-context :page
                                            :public? true}}
-     :logseq.property.publish/published-url {:title "Published URL"
+     :logseq.property.publish/published-url {:title "Published URL (URL đã xuất bản)"
                                              :schema
                                              {:type :url
                                               :view-context :page
                                               :public? true}}
-     :logseq.property/exclude-from-graph-view {:title "Excluded from Graph view?"
+     :logseq.property/exclude-from-graph-view {:title "Excluded from Graph view? (Ẩn khỏi Graph view?)"
                                                :schema
                                                {:type :checkbox
                                                 :hide? true
                                                 :view-context :page
                                                 :public? true}}
 
-     :logseq.property.view/type {:title "View Type"
+     :logseq.property.view/type {:title "View Type (Kiểu xem)"
                                  :schema
                                  {:type :default
                                   :public? false
@@ -419,27 +419,27 @@
                                  :properties {:logseq.property/default-value :logseq.property.view/type.table}
                                  :queryable? true}
 
-     :logseq.property.view/feature-type {:title "View Feature Type"
+     :logseq.property.view/feature-type {:title "View Feature Type (Loại tính năng xem)"
                                          :schema
                                          {:type :keyword
                                           :public? false
                                           :hide? true}
                                          :queryable? false}
 
-     :logseq.property.view/group-by-property {:title "View group by property"
+     :logseq.property.view/group-by-property {:title "View group by property (Nhóm theo thuộc tính)"
                                               :schema
                                               {:type :property
                                                :public? false
                                                :hide? true}
                                               :queryable? true}
 
-     :logseq.property.view/sort-groups-by-property {:title "View sort groups by"
+     :logseq.property.view/sort-groups-by-property {:title "View sort groups by (Sắp xếp nhóm theo)"
                                                     :schema
                                                     {:type :property
                                                      :hide? true
                                                      :public? false}
                                                     :rtc property-ignore-rtc}
-     :logseq.property.view/sort-groups-desc? {:title "View sort groups DESC"
+     :logseq.property.view/sort-groups-desc? {:title "View sort groups DESC (Sắp xếp nhóm giảm dần)"
                                               :schema
                                               {:type :checkbox
                                                :hide? true
@@ -447,190 +447,190 @@
                                               :properties {:logseq.property/scalar-default-value true}
                                               :rtc property-ignore-rtc}
 
-     :logseq.property.table/sorting {:title "View sorting"
+     :logseq.property.table/sorting {:title "View sorting (Sắp xếp)"
                                      :schema
                                      {:type :coll
                                       :hide? true
                                       :public? false}
                                      :rtc property-ignore-rtc}
 
-     :logseq.property.table/filters {:title "View filters"
+     :logseq.property.table/filters {:title "View filters (Bộ lọc)"
                                      :schema
                                      {:type :map
                                       :hide? true
                                       :public? false}}
 
-     :logseq.property.table/hidden-columns {:title "View hidden columns"
+     :logseq.property.table/hidden-columns {:title "View hidden columns (Cột ẩn)"
                                             :schema
                                             {:type :keyword
                                              :cardinality :many
                                              :hide? true
                                              :public? false}}
 
-     :logseq.property.table/ordered-columns {:title "View ordered columns"
+     :logseq.property.table/ordered-columns {:title "View ordered columns (Thứ tự cột)"
                                              :schema
                                              {:type :coll
                                               :hide? true
                                               :public? false}}
 
-     :logseq.property.table/sized-columns {:title "View columns settings"
+     :logseq.property.table/sized-columns {:title "View columns settings (Cài đặt cột)"
                                            :schema
                                            {:type :map
                                             :hide? true
                                             :public? false}}
-     :logseq.property.table/pinned-columns {:title "Table view pinned columns"
+     :logseq.property.table/pinned-columns {:title "Table view pinned columns (Cột ghim bảng)"
                                             :schema
                                             {:type :property
                                              :cardinality :many
                                              :hide? true
                                              :public? false}}
-     :logseq.property/view-for {:title "This view belongs to"
+     :logseq.property/view-for {:title "This view belongs to (Xem thuộc về)"
                                 :schema
                                 {:type :node
                                  :hide? true
                                  :public? false}}
-     :logseq.property.asset/type {:title "File Type"
+     :logseq.property.asset/type {:title "File Type (Loại tệp)"
                                   :schema {:type :string
                                            :hide? true
                                            :public? false}
                                   :queryable? true}
-     :logseq.property.asset/external-url {:title "External URL"
+     :logseq.property.asset/external-url {:title "External URL (Liên kết ngoài)"
                                           :schema {:type :string
                                                    :hide? false
                                                    :public? true}
                                           :queryable? true}
      ;; need to rename for better alignment with practical purposes
-     :logseq.property.asset/external-file-name {:title "External file name"
+     :logseq.property.asset/external-file-name {:title "External file name (Tên tệp ngoài)"
                                                 :schema {:type :string
                                                          :hide? true
                                                          :public? false}
                                                 :queryable? false}
-     :logseq.property.asset/size {:title "File Size"
+     :logseq.property.asset/size {:title "File Size (Kích thước tệp)"
                                   :schema {:type :raw-number
                                            :hide? true
                                            :public? false}
                                   :queryable? true}
-     :logseq.property.asset/width {:title "Image width"
+     :logseq.property.asset/width {:title "Image width (Chiều rộng ảnh)"
                                    :schema {:type :raw-number
                                             :hide? true
                                             :public? false}
                                    :queryable? true}
-     :logseq.property.asset/height {:title "Image height"
+     :logseq.property.asset/height {:title "Image height (Chiều cao ảnh)"
                                     :schema {:type :raw-number
                                              :hide? true
                                              :public? false}
                                     :queryable? true}
-     :logseq.property.asset/checksum {:title "File checksum"
+     :logseq.property.asset/checksum {:title "File checksum (Mã kiểm tra tệp)"
                                       :schema {:type :string
                                                :hide? true
                                                :public? false}}
-     :logseq.property.asset/last-visit-page {:title "Last visit page"
+     :logseq.property.asset/last-visit-page {:title "Last visit page (Trang xem lần cuối)"
                                              :schema {:type :raw-number
                                                       :hide? true
                                                       :public? false}
                                              :rtc property-ignore-rtc}
-     :logseq.property.asset/remote-metadata {:title "File remote metadata"
+     :logseq.property.asset/remote-metadata {:title "File remote metadata (Metadata tệp từ xa)"
                                              :schema
                                              {:type :map
                                               :hide? true
                                               :public? false}
                                              :properties
                                              {:logseq.property/description "Metadata of asset in remote storage"}}
-     :logseq.property.asset/resize-metadata {:title "Asset resize metadata"
+     :logseq.property.asset/resize-metadata {:title "Asset resize metadata (Metadata thay đổi kích thước)"
                                              :schema {:type :map
                                                       :hide? true
                                                       :public? false}}
-     :logseq.property.asset/align {:title "Asset alignment"
+     :logseq.property.asset/align {:title "Asset alignment (Căn chỉnh tệp)"
                                    :schema {:type :keyword
                                             :hide? true
                                             :public? false}
                                    :queryable? false}
-     :logseq.property.fsrs/due {:title "Due"
+     :logseq.property.fsrs/due {:title "Due (Hạn ôn tập)"
                                 :schema
                                 {:type :datetime
                                  :hide? false
                                  :public? false}}
-     :logseq.property.fsrs/state {:title "State"
+     :logseq.property.fsrs/state {:title "State (Trạng thái FSRS)"
                                   :schema
                                   {:type :map
                                    :hide? false ; TODO: show for debug now, hide it later
                                    :public? false}}
-     :logseq.property.user/name {:title "User Name"
+     :logseq.property.user/name {:title "User Name (Tên người dùng)"
                                  :schema
                                  {:type :string
                                   :hide? false
                                   :public? true}}
-     :logseq.property.user/email {:title "User Email"
+     :logseq.property.user/email {:title "User Email (Email người dùng)"
                                   :schema
                                   {:type :string
                                    :hide? false
                                    :public? true}}
-     :logseq.property.user/avatar {:title "User Avatar"
+     :logseq.property.user/avatar {:title "User Avatar (Ảnh đại diện)"
                                    :schema
                                    {:type :string
                                     :hide? false
                                     :public? true}}
-     :logseq.property/enable-history? {:title "Enable property history"
+     :logseq.property/enable-history? {:title "Enable property history (Bật lịch sử thuộc tính)"
                                        :schema {:type :checkbox
                                                 :public? true
                                                 :view-context :property}
                                        :properties
                                        {:logseq.property/description "Records history anytime a property's value changes on a node."}}
-     :logseq.property.history/block {:title "History block"
+     :logseq.property.history/block {:title "History block (Block lịch sử)"
                                      :schema {:type :entity
                                               :hide? true}}
-     :logseq.property.history/property {:title "History property"
+     :logseq.property.history/property {:title "History property (Thuộc tính lịch sử)"
                                         :schema {:type :property
                                                  :hide? true}}
-     :logseq.property.history/ref-value {:title "History value"
+     :logseq.property.history/ref-value {:title "History value (Giá trị lịch sử)"
                                          :schema {:type :entity
                                                   :hide? true}}
-     :logseq.property.history/scalar-value {:title "History scalar value"
+     :logseq.property.history/scalar-value {:title "History scalar value (Giá trị lịch sử đơn)"
                                             :schema {:type :any
                                                      :hide? true}}
-     :logseq.property/created-by-ref {:title "Node created by"
+     :logseq.property/created-by-ref {:title "Node created by (Tạo bởi)"
                                       :schema {:type :entity
                                                :hide? true}
                                       :queryable? true}
-     :logseq.property/deleted-at {:title "Deleted at"
+     :logseq.property/deleted-at {:title "Deleted at (Xóa lúc)"
                                   :schema {:type :datetime
                                            :hide? true
                                            :public? false}}
-     :logseq.property/deleted-by-ref {:title "Deleted by"
+     :logseq.property/deleted-by-ref {:title "Deleted by (Xóa bởi)"
                                       :schema {:type :entity
                                                :hide? true
                                                :public? false}}
-     :logseq.property.recycle/original-parent {:title "Recycle original parent"
+     :logseq.property.recycle/original-parent {:title "Recycle original parent (Node cha gốc)"
                                                :schema {:type :node
                                                         :hide? true
                                                         :public? false}}
-     :logseq.property.recycle/original-page {:title "Recycle original page"
+     :logseq.property.recycle/original-page {:title "Recycle original page (Trang gốc)"
                                              :schema {:type :node
                                                       :hide? true
                                                       :public? false}}
-     :logseq.property.recycle/original-order {:title "Recycle original order"
+     :logseq.property.recycle/original-order {:title "Recycle original order (Thứ tự gốc)"
                                               :schema {:type :string
                                                        :hide? true
                                                        :public? false}}
-     :logseq.property.reaction/emoji-id {:title "Reaction emoji"
+     :logseq.property.reaction/emoji-id {:title "Reaction emoji (Biểu tượng cảm xúc)"
                                          :schema {:type :string
                                                   :public? false
                                                   :hide? true}}
-     :logseq.property.reaction/target {:title "Reaction target"
+     :logseq.property.reaction/target {:title "Reaction target (Mục tiêu phản ứng)"
                                        :schema {:type :node
                                                 :public? false
                                                 :hide? true}}
-     :logseq.property/used-template {:title "Used template"
+     :logseq.property/used-template {:title "Used template (Mẫu đã dùng)"
                                      :schema {:type :node
                                               :public? false
                                               :hide? true
                                               :classes #{:logseq.class/Template}}}
-     :logseq.property/template-applied-to {:title "Apply template to tags"
+     :logseq.property/template-applied-to {:title "Apply template to tags (Áp dụng mẫu cho thẻ)"
                                            :schema {:type :class
                                                     :cardinality :many
                                                     :public? true}
                                            :queryable? true}
-     :logseq.property.sync/large-title-object {:title "Reference to large block title stored in remote object storage"
+     :logseq.property.sync/large-title-object {:title "Reference to large block title stored in remote object storage (Tham chiếu tiêu đề block lớn từ xa)"
                                                :schema {:type :map
                                                         :public? false
                                                         :hide? true}})))

@@ -7,6 +7,25 @@
             [logseq.db :as ldb]
             [logseq.db.sqlite.create-graph :as sqlite-create-graph]))
 
+(def ^:private random-fallback-icons
+  "Bộ icon Tabler đơn giản dùng làm fallback ngẫu nhiên cho node không có
+  :logseq.property/icon. Chọn các icon nét gọn, dễ nhìn ở kích thước nhỏ."
+  ["star" "heart" "bookmark" "flag" "bell" "bulb" "leaf" "flame"
+   "cloud" "moon" "sun" "snowflake" "droplet" "rainbow" "sparkles"
+   "diamond" "crown" "gift" "rocket" "anchor" "compass" "map-pin"
+   "tree" "flower" "feather" "fish" "bug" "ghost" "puzzle"
+   "music" "headphones" "camera" "palette" "brush" "pencil"
+   "key" "lock" "shield" "target" "trophy" "medal"
+   "coffee" "pizza" "candy" "cake" "ice-cream"
+   "circle" "square" "triangle" "hexagon" "polygon"
+   "atom" "dna" "molecule" "planet" "telescope"])
+
+(defn- random-icon-for
+  [db-id]
+  (let [n (count random-fallback-icons)
+        h (js/Math.abs (hash db-id))]
+    (nth random-fallback-icons (mod h n))))
+
 (defn- build-links
   [links]
   (keep (fn [[from to]]
@@ -42,7 +61,12 @@
                    :label page-title
                    :size size
                    :color color
-                   :block/created-at (:block/created-at p)}
+                   :block/created-at (:block/created-at p)
+                   :icon (or (:logseq.property/icon p)
+                             (cond
+                               (ldb/class? p)    "hash"
+                               (ldb/property? p) "letter-p"
+                               :else (random-icon-for (:db/id p))))}
                    (contains? page-parents (:db/id p))
                    (assoc :parent true)))
                (js/console.error (str "Page doesn't have :block/title " p)))))

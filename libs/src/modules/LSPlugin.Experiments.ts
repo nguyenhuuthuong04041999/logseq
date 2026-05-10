@@ -48,24 +48,24 @@ export class LSPluginExperiments {
   constructor(private ctx: LSPluginUser) {}
 
   get React(): unknown {
-    return this.ensureHostScope().React
+    return this.ensureHostScope()?.React
   }
 
   get ReactDOM(): unknown {
-    return this.ensureHostScope().ReactDOM
+    return this.ensureHostScope()?.ReactDOM
   }
 
   get Components() {
-    const exper = this.ensureHostScope().logseq.sdk.experiments
+    const exper = this.ensureHostScope()?.logseq?.sdk?.experiments
     return {
-      Editor: exper.cp_page_editor as (props: { page: string } & any) => any,
+      Editor: exper?.cp_page_editor as (props: { page: string } & any) => any,
     }
   }
 
   get Utils() {
-    const utils = this.ensureHostScope().logseq.sdk.utils
+    const utils = this.ensureHostScope()?.logseq?.sdk?.utils
     const withCall = (name: string): ((input: any) => any) =>
-      utils[safeSnakeCase(name)]
+      utils?.[safeSnakeCase(name)]
     return {
       toClj: withCall('toClj'),
       jsxToClj: withCall('jsxToClj'),
@@ -76,16 +76,17 @@ export class LSPluginExperiments {
   }
 
   get pluginLocal(): PluginLocal {
-    return this.ensureHostScope().LSPluginCore.ensurePlugin(
+    return this.ensureHostScope()?.LSPluginCore?.ensurePlugin(
       this.ctx.baseInfo.id
     )
   }
 
   public invokeExperMethod(type: string, ...args: Array<any>) {
     const host = this.ensureHostScope()
+    if (!host) return
     type = safeSnakeCase(type)?.toLowerCase()
     const fn =
-      host.logseq.api['exper_' + type] || host.logseq.sdk.experiments[type]
+      host.logseq?.api?.['exper_' + type] || host.logseq?.sdk?.experiments?.[type]
     return fn?.apply(host, args)
   }
 
@@ -256,7 +257,7 @@ export class LSPluginExperiments {
 
     switch (type) {
       case 'katex':
-        if (host.katex) {
+        if (host?.katex) {
           enhancer(host.katex).catch(console.error)
         }
         break
@@ -272,12 +273,16 @@ export class LSPluginExperiments {
   }
 
   ensureHostScope(): any {
+    const top = window.top
     try {
-      window.top?.document
+      void top?.document
     } catch (_e) {
-      console.error('Can not access host scope!')
+      console.warn(
+        '[LSPlugin:Experiments] Cannot access host scope — cross-origin restriction.',
+        'Plugin and host must share the same origin (lsp://logseq.com).'
+      )
+      return null
     }
-
-    return window.top
+    return top
   }
 }

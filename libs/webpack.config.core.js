@@ -1,6 +1,7 @@
 const webpack = require('webpack')
 const path = require('path')
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
+let BundleAnalyzerPlugin
+try { BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin } catch (_) {}
 
 module.exports = (env, argv) => {
   const config = {
@@ -33,7 +34,7 @@ module.exports = (env, argv) => {
 
   if (argv.mode === 'production') {
     delete config.devtool
-    config.plugins.push(new BundleAnalyzerPlugin())
+    if (BundleAnalyzerPlugin) config.plugins.push(new BundleAnalyzerPlugin())
   }
 
   return config

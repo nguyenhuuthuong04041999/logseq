@@ -144,7 +144,8 @@
 (defmethod handle :page/deleted [[_ page-name _tx-meta]]
   (when page-name
     (when-not (util/mobile?)
-      (page-common-handler/after-page-deleted! page-name))))
+      (page-common-handler/after-page-deleted! page-name))
+    (plugin-handler/hook-plugin-app :page-deleted {:name page-name})))
 
 (defmethod handle :page/renamed [[_ repo data]]
   (when-not (util/mobile?)

@@ -28,7 +28,7 @@
 (defonce FILE_LSP_SCHEME "lsp")
 (defonce FILE_ASSETS_SCHEME "assets")
 (defonce LSP_PROTOCOL (str FILE_LSP_SCHEME "://"))
-(defonce PLUGIN_URL (str LSP_PROTOCOL "logseq.io/"))
+(defonce PLUGIN_URL (str LSP_PROTOCOL "logseq.com/plugins/"))
 (defonce STATIC_URL (str LSP_PROTOCOL "logseq.com/"))
 (defonce PLUGINS_ROOT (.join node-path (.homedir os) ".logseq/plugins"))
 
@@ -96,12 +96,14 @@
    (fn [^js request callback]
      (let [url (.-url request)
            url' ^js (js/URL. url)
-           [_ ROOT] (if (string/starts-with? url PLUGIN_URL)
-                      [PLUGIN_URL PLUGINS_ROOT]
-                      [STATIC_URL js/__dirname])
-
+           plugin? (string/starts-with? url PLUGIN_URL)
+           ROOT (if plugin? PLUGINS_ROOT js/__dirname)
            path' (.-pathname url')
            path' (utils/safe-decode-uri-component path')
+           ;; Strip the /plugins prefix so lsp://logseq.com/plugins/foo → ROOT/foo
+           path' (if plugin?
+                   (string/replace-first path' "/plugins" "")
+                   path')
            path' (.join node-path ROOT path')]
 
        (callback #js {:path path'}))))

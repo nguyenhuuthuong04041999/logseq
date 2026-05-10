@@ -443,6 +443,9 @@ const db: Partial<IDBProxy> = {
 
     if (inputs?.some((it) => typeof it === 'function')) {
       const host = this.Experiments.ensureHostScope()
+      if (!host) {
+        throw new Error('datascriptQuery with function inputs requires host scope access')
+      }
       return host.logseq.api.datascript_query(query, ...inputs)
     }
 

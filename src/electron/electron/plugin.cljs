@@ -38,7 +38,7 @@
 
 (defn dotdir-file?
   [file]
-  (and file (string/starts-with? (node-path/normalize file) cfgs/dot-root)))
+  (and file (string/starts-with? (node-path/normalize file) (cfgs/dot-root))))
 
 (defn assetsdir-file?
   [file]
@@ -224,7 +224,7 @@
                                    (debug "[Download URL Error]" asset)
                                    (throw (js/Error. [:release-asset-not-found (js/JSON.stringify asset)])))
 
-                          dest   (.join node-path cfgs/dot-root "plugins" (:id item))
+                          dest   (.join node-path (cfgs/dot-root) "plugins" (:id item))
                           _      (when-not only-check (download-asset-zip item dl-url latest-version dest))
                           _      (debug (str "[" (if only-check "Checked" "Updated") " DONE]") latest-version)]
 

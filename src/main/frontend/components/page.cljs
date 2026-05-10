@@ -23,9 +23,11 @@
             [frontend.db-mixins :as db-mixins]
             [frontend.db.async :as db-async]
             [frontend.db.model :as model]
+            [frontend.components.icon :as icon-component]
             [frontend.extensions.graph :as graph]
             [frontend.extensions.graph.pixi :as pixi]
             [frontend.handler.common :as common-handler]
+            [frontend.handler.property :as property-handler]
             [frontend.handler.config :as config-handler]
             [frontend.handler.editor :as editor-handler]
             [frontend.handler.graph :as graph-handler]
@@ -650,6 +652,12 @@
 (defonce *link-dist (atom 70))
 (defonce *charge-strength (atom -600))
 (defonce *charge-range (atom 600))
+(defonce *color-filters (atom []))
+(defonce *graph-context-menu (atom nil))
+(defonce *graph-hovered-node (atom nil))
+(defonce *pixi-graph-ref (atom nil))
+(defonce *icon-overlay-data (atom []))
+(defonce *raf-icon-id (atom nil))
 
 (rum/defcs simulation-switch < rum/reactive
   [state]
@@ -665,6 +673,33 @@
             (pixi/resume-simulation!)
             (pixi/stop-simulation!))))
       true)]))
+
+(rum/defcs color-filter-form <
+  (rum/local "" ::kw)
+  (rum/local "#6366F1" ::col)
+  [state]
+  (let [*kw (::kw state)
+        *col (::col state)
+        submit! (fn []
+                  (let [kw (string/trim @*kw)]
+                    (when (seq kw)
+                      (swap! *color-filters conj {:keyword kw :color @*col})
+                      (reset! *kw "")
+                      (reset! *col "#6366F1"))))]
+    [:div.flex.items-center.gap-2.mt-2
+     [:input.form-input.text-sm
+      {:type        "text"
+       :value       @*kw
+       :placeholder "keyword..."
+       :style       {:width "90px"}
+       :on-change   #(reset! *kw (.. % -target -value))
+       :on-key-down #(when (= (.-key %) "Enter") (submit!))}]
+     [:input
+      {:type      "color"
+       :value     @*col
+       :style     {:width "28px" :height "28px" :cursor "pointer" :border "none" :padding 0}
+       :on-change #(reset! *col (.. % -target -value))}]
+     [:a.opacity-70.opacity-100 {:on-click submit!} "+"]]))
 
 (rum/defc ^:large-vars/cleanup-todo graph-filters < rum/reactive
   [graph settings forcesettings n-hops]
@@ -693,7 +728,8 @@
                             (let [new-forcesettings (assoc forcesettings key value)]
                               (config-handler/set-config! :graph/forcesettings new-forcesettings)))
         search-graph-filters (state/sub :search/graph-filters)
-        focus-nodes (rum/react *focus-nodes)]
+        focus-nodes (rum/react *focus-nodes)
+        color-filters (rum/react *color-filters)]
     [:div.absolute.top-4.right-4.graph-filters
      [:div.flex.flex-col
       [:div.shadow-xl.rounded-sm
@@ -816,6 +852,28 @@
                 (t :graph/click-to-search)])]))
          {:search-filters search-graph-filters})
         (graph-filter-section
+         [:span.font-medium "Màu node"]
+         (fn [open?]
+           (filter-expand-area
+            open?
+            [:div.p-6
+             (when (seq color-filters)
+               [:div
+                (for [{kw :keyword color :color} color-filters]
+                    [:div.flex.flex-row.justify-between.items-center.mb-2
+                     {:key kw}
+                     [:div.flex.items-center.gap-2
+                      [:span.rounded-full
+                       {:style {:background-color color :width "12px" :height "12px" :display "inline-block"}}]
+                      [:span.font-medium kw]]
+                     [:a.search-filter-close.opacity-70.opacity-100
+                      {:on-click #(swap! *color-filters (fn [fs] (vec (remove (fn [f] (= (:keyword f) kw)) fs))))}
+                      svg/close]])
+                  [:a.opacity-70.opacity-100 {:on-click #(reset! *color-filters [])}
+                   (t :notification/clear-all)]])
+             (color-filter-form)]))
+         {})
+        (graph-filter-section
          [:span.font-medium (t :graph/forces)]
          (fn [open?]
            (filter-expand-area
@@ -882,9 +940,133 @@
                [:div [:a {:on-click #(.requestAnimationFrame js/window (fn [] (utils/canvasToImage canvas "graph" "png")))} (t :graph/as-png)]]])))
          {:search-filters search-graph-filters})]]]]))
 
+(rum/defcs graph-node-context-menu < rum/reactive
+  (rum/local "" ::input)
+  [state]
+  (when-let [{:keys [x y page-entity]} (rum/react *graph-context-menu)]
+    (let [close!   #(reset! *graph-context-menu nil)
+          *input   (::input state)
+          icon-val (:logseq.property/icon page-entity)
+          save!    (fn []
+                     (let [v (string/trim @*input)]
+                       (when (seq v)
+                         (property-handler/batch-set-block-property!
+                          [(:db/id page-entity)]
+                          :logseq.property/icon
+                          {:type :tabler-icon :id v}))
+                       (close!)))
+          clear!   (fn []
+                     (property-handler/batch-set-block-property!
+                      [(:db/id page-entity)]
+                      :logseq.property/icon
+                      nil)
+                     (close!))]
+      [:div
+       {:style           {:position "fixed" :left x :top y :z-index 1000
+                          :background "var(--ls-primary-background-color)"
+                          :border "1px solid var(--ls-border-color)"
+                          :border-radius "6px"
+                          :box-shadow "0 4px 16px rgba(0,0,0,0.2)"
+                          :padding "8px"}
+        :on-click        #(.stopPropagation %)
+        :on-context-menu #(.preventDefault %)}
+       [:div.text-xs.opacity-60.mb-2 (or (:block/title page-entity) "Node")]
+       [:div.flex.items-center.gap-2
+        [:span {:style {:font-size "20px" :width "24px" :text-align "center"}}
+         (when (seq @*input)
+           (icon-component/icon {:type :tabler-icon :id @*input}))]
+        [:input.form-input
+         {:type        "text"
+          :value       @*input
+          :placeholder "book, star, hash …"
+          :auto-focus  true
+          :style       {:width "140px" :font-size "13px"}
+          :on-change   #(reset! *input (.. % -target -value))
+          :on-key-down (fn [e]
+                         (case (.-key e)
+                           "Enter"  (save!)
+                           "Escape" (close!)
+                           nil))}]]
+       [:div.flex.gap-1.mt-2
+        (when icon-val
+          [:span.flex.items-center.gap-1.mr-1.opacity-60
+           (icon-component/icon icon-val)
+           [:span.text-xs "hiện tại"]])
+        [:button.btn.btn-sm {:on-click save!} "Lưu"]
+        (when icon-val
+          [:button.btn.btn-sm {:on-click clear!} "Xóa"])]])))
+
+(rum/defc graph-icon-overlays < rum/reactive
+  []
+  (let [overlays (rum/react *icon-overlay-data)]
+    (when (seq overlays)
+      [:div {:style {:position "absolute" :top 0 :left 0
+                     :width "100%" :height "100%"
+                     :pointer-events "none" :overflow "hidden"
+                     :z-index 10}}
+       (for [{:keys [id x y icon]} overlays]
+         [:div {:key   (str id)
+                :style {:position        "absolute"
+                        :left            (str (- x 8) "px")
+                        :top             (str (- y 8) "px")
+                        :width           "16px"
+                        :height          "16px"
+                        :display         "flex"
+                        :align-items     "center"
+                        :justify-content "center"
+                        :pointer-events  "none"
+                        :color           "white"
+                        :font-size       "10px"
+                        :line-height     "1"}}
+          (icon-component/icon icon)])])))
+
 (defonce last-node-position (atom nil))
+
+(defn- coerce-icon
+  "Normalize icon map: ensure :id is a string (handles keyword/symbol from CLI EDN parsing)."
+  [icon]
+  (when icon
+    (let [id (:id icon)]
+      (if (and id (not (string? id)))
+        (assoc icon :id (name id))
+        icon))))
+
+(defn- start-icon-raf!
+  "Start RAF loop that re-queries icons from DB every 60 frames and updates overlay positions."
+  [pixi-graph node-ids]
+  (when @*raf-icon-id (js/cancelAnimationFrame @*raf-icon-id))
+  (let [*frame (atom 0)
+        *icons (atom {})]
+    (letfn [(frame []
+              (when pixi-graph
+                (swap! *frame inc)
+                ;; Query DB on first frame and then every 60 frames (~1s), so icons set
+                ;; after graph render also appear without requiring a full re-render.
+                (when (or (= 1 @*frame) (zero? (mod @*frame 60)))
+                  (reset! *icons
+                          (into {} (keep (fn [nid]
+                                          (let [db-id (js/parseInt nid)]
+                                            (when (and db-id (not (js/isNaN db-id)))
+                                              (when-let [icon (coerce-icon (:logseq.property/icon (db/entity db-id)))]
+                                                [nid icon]))))
+                                        node-ids))))
+                (when (seq @*icons)
+                  (let [nodes-map (.getNodesObjects pixi-graph)]
+                    (when nodes-map
+                      (reset! *icon-overlay-data
+                              (keep (fn [[nid icon]]
+                                      (when-let [pnode (.get nodes-map nid)]
+                                        (when-let [gfx (.-nodeGfx pnode)]
+                                          (let [pos (.getGlobalPosition gfx)]
+                                            {:id nid :x (.-x pos) :y (.-y pos) :icon icon}))))
+                                    @*icons))))))
+              (reset! *raf-icon-id (js/requestAnimationFrame frame)))]
+      (reset! *raf-icon-id (js/requestAnimationFrame frame)))))
+
 (defn- graph-register-handlers
-  [graph focus-nodes n-hops dark?]
+  [graph focus-nodes n-hops dark? node-ids]
+  (reset! *pixi-graph-ref graph)
+  (start-icon-raf! graph node-ids)
   (.on graph "nodeClick"
        (fn [event node]
          (let [x (.-x event)
@@ -897,7 +1079,11 @@
            (graph/on-click-handler graph node event focus-nodes n-hops drag? dark?))))
   (.on graph "nodeMousedown"
        (fn [event node]
-         (reset! last-node-position [node (.-x event) (.-y event)]))))
+         (reset! last-node-position [node (.-x event) (.-y event)])))
+  (.on graph "nodeMouseover"
+       (fn [_event node] (reset! *graph-hovered-node node)))
+  (.on graph "nodeMouseout"
+       (fn [_event _node] (reset! *graph-hovered-node nil))))
 
 (rum/defc global-graph-inner < rum/reactive
   [graph settings forcesettings theme]
@@ -914,8 +1100,18 @@
                        (seq focus-nodes)
                        (not (:orphan-pages? settings)))
                 (graph-handler/n-hops graph focus-nodes n-hops)
-                graph)]
+                graph)
+        node-ids (map :id (:nodes graph))]
     [:div.relative#global-graph
+     {:on-click        #(reset! *graph-context-menu nil)
+      :on-context-menu (fn [e]
+                         (.preventDefault e)
+                         (when-let [node-id @*graph-hovered-node]
+                           (when-let [page (some-> (js/parseInt node-id) db/entity)]
+                             (reset! *graph-context-menu
+                                     {:x (.-clientX e)
+                                      :y (.-clientY e)
+                                      :page-entity page}))))}
      (graph/graph-2d {:nodes (:nodes graph)
                       :links (:links graph)
                       :width (- width 24)
@@ -925,11 +1121,13 @@
                       :charge-strength charge-strength
                       :charge-range charge-range
                       :register-handlers-fn
-                      (fn [graph]
-                        (graph-register-handlers graph *focus-nodes *n-hops dark?))
+                      (fn [pixi-g]
+                        (graph-register-handlers pixi-g *focus-nodes *n-hops dark? node-ids))
                       :reset? reset?
                       :forcereset? forcereset?})
-     (graph-filters graph settings forcesettings n-hops)]))
+     (graph-icon-overlays)
+     (graph-filters graph settings forcesettings n-hops)
+     (graph-node-context-menu)]))
 
 (defn- filter-graph-nodes
   [nodes filters]
@@ -938,8 +1136,21 @@
       (filter (fn [node] (some #(re-find % (:label node)) filter-patterns)) nodes))
     nodes))
 
+(defn- apply-color-filters
+  [nodes color-filters]
+  (if (seq color-filters)
+    (map (fn [node]
+           (let [label (:label node)
+                 matched (some (fn [{kw :keyword c :color}]
+                                 (when (re-find (re-pattern (str "(?i)" (util/regex-escape kw))) label)
+                                   c))
+                               color-filters)]
+             (if matched (assoc node :color matched) node)))
+         nodes)
+    nodes))
+
 (rum/defc graph-aux
-  [settings forcesettings theme search-graph-filters]
+  [settings forcesettings theme search-graph-filters color-filters]
   (let [[graph set-graph!] (hooks/use-state nil)]
     (hooks/use-effect!
      (fn []
@@ -950,7 +1161,9 @@
          (set-graph! result)))
      [theme settings])
     (when graph
-      (let [graph' (update graph :nodes #(filter-graph-nodes % search-graph-filters))]
+      (let [graph' (-> graph
+                       (update :nodes #(filter-graph-nodes % search-graph-filters))
+                       (update :nodes #(apply-color-filters % color-filters)))]
         (global-graph-inner graph' settings forcesettings theme)))))
 
 (rum/defcs global-graph < rum/reactive
@@ -962,6 +1175,10 @@
   {:will-unmount (fn [state]
                    (reset! *n-hops nil)
                    (reset! *focus-nodes [])
+                   (when @*raf-icon-id
+                     (js/cancelAnimationFrame @*raf-icon-id)
+                     (reset! *raf-icon-id nil))
+                   (reset! *icon-overlay-data [])
                    ;; Clear graph search mode on leave so block selection action bar
                    ;; can open normally on non-graph routes.
                    (state/set-search-mode! nil)
@@ -972,8 +1189,9 @@
         theme (state/sub :ui/theme)
         ;; Needed for query to retrigger after reset
         _reset? (rum/react *graph-reset?)
-        search-graph-filters (state/sub :search/graph-filters)]
-    (graph-aux settings forcesettings theme search-graph-filters)))
+        search-graph-filters (state/sub :search/graph-filters)
+        color-filters (rum/react *color-filters)]
+    (graph-aux settings forcesettings theme search-graph-filters color-filters)))
 
 (rum/defc page-graph-inner < rum/reactive
   [_page graph dark?]
@@ -994,8 +1212,8 @@
                       :height 600
                       :dark? dark?
                       :register-handlers-fn
-                      (fn [graph]
-                        (graph-register-handlers graph (atom nil) (atom nil) dark?))})]))
+                      (fn [pixi-g]
+                        (graph-register-handlers pixi-g (atom nil) (atom nil) dark? nil))})]))
 
 (rum/defc page-graph-aux
   [page opts]

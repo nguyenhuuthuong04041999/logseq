@@ -112,12 +112,23 @@
   (p/let [result (db-async/<q
                   (state/get-current-repo)
                   {:transact-db? false}
-                  '[:find [(pull ?page [:db/id :block/uuid :block/name :block/title :block/created-at :block/updated-at]) ...]
+                  '[:find [(pull ?page [:db/id :block/uuid :block/name :block/title :block/created-at :block/updated-at
+                                        {:block/parent [:db/id :logseq.property/deleted-at
+                                                        {:block/parent [:db/id :logseq.property/deleted-at
+                                                                        {:block/parent [:db/id :logseq.property/deleted-at]}]}]}]) ...]
                     :where
                     [?page :block/name]
                     [(get-else $ ?page :logseq.property/hide? false) ?hide]
-                    [(false? ?hide)]])]
+                    [(false? ?hide)]
+                    [(missing? $ ?page :logseq.property/deleted-at)]])]
     (->> result
+         (remove (fn [page]
+                   (loop [parent (:block/parent page)]
+                     (cond
+                       (nil? parent) false
+                       (:logseq.property/deleted-at parent) true
+                       :else (recur (:block/parent parent))))))
+         (map #(dissoc % :block/parent))
          (sort-by :block/title)
          sdk-utils/result->js)))
 

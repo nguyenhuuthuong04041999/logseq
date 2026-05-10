@@ -6,15 +6,15 @@
             [electron.logger :as logger]))
 
 ;; FIXME: move configs.edn to where it should be
-(defonce dot-root (.join node-path (.getPath app "home") ".logseq"))
-(defonce cfg-root (.getPath app "userData"))
-(defonce cfg-path (.join node-path cfg-root "configs.edn"))
+(defn dot-root [] (.join node-path (.getPath app "home") ".logseq"))
+(defn- cfg-root [] (.getPath app "userData"))
+(defn- cfg-path [] (.join node-path (cfg-root) "configs.edn"))
 
 (defn- ensure-cfg
   []
   (try
-    (.ensureFileSync fs cfg-path)
-    (let [body (.toString (.readFileSync fs cfg-path))]
+    (.ensureFileSync fs (cfg-path))
+    (let [body (.toString (.readFileSync fs (cfg-path)))]
       (if (seq body) (reader/read-string body) {}))
     (catch :default e
       (logger/error :cfg-error e))))
@@ -22,7 +22,7 @@
 (defn- write-cfg!
   [cfg]
   (try
-    (.writeFileSync fs cfg-path (pr-str cfg)) cfg
+    (.writeFileSync fs (cfg-path) (pr-str cfg)) cfg
     (catch :default e
       (logger/error :cfg-error e))))
 

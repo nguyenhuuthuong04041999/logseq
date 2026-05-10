@@ -610,7 +610,7 @@ class PluginLocal extends EventEmitter<
       const url = path.join(localRoot, filePath)
       filePath = reg.test(url) ? url : PROTOCOL_FILE + url
     }
-    return !this.options.effect && this.isInstalledInLocalDotRoot
+    return this.isInstalledInLocalDotRoot
       ? convertToLSPResource(filePath, this.dotPluginsRoot)
       : filePath
   }
@@ -787,12 +787,7 @@ class PluginLocal extends EventEmitter<
 
     entry = withFileProtocol(path.normalize(entryPath))
 
-    if (!this._options.effect) {
-      entry = convertToLSPResource(
-        entry,
-        this.dotPluginsRoot
-      )
-    }
+    entry = convertToLSPResource(entry, this.dotPluginsRoot)
 
     this._options.entry = entry
   }
